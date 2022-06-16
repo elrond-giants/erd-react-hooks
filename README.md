@@ -67,17 +67,30 @@ function AuthComponent() {
 }
 ```
 
-You can pass a `token` to the `login` method, and it will be included in the auth signature.
+You can pass an object with a `token` to the `login` method, and it will be included in the auth signature.
 
 ```typescript
 const {provider, login} = useAuth();
 const token = "some_token";
 
-await login(AuthProviderType.MAIAR, token);
+await login(AuthProviderType.MAIAR, {token});
 const authSignature = provider.getSignature();
 ```
 
 :grey_exclamation: When using the *Maiar provider*, the login method will return a promise that resolves with a URL.
-It's a usual practice to put this URL in a QR code and let users scan it with Maiar App. 
+It's a usual practice to put this URL in a QR code and let users scan it with Maiar App.
 
+When using the *Ledger provider* you MUST set the `ledgerAccountIndex` in the options object of the `login` method.
 
+The `getLedgerAccounts(page?: number | undefined, pageSize?: number | undefined): Promise<string[]>` method can be used to get a list of accounts.
+
+```typescript
+const {login, getLedgerAccounts} = useAuth();
+const accounts = getLedgerAccounts();
+
+// --------
+
+const selectedAccountIndex = 1;
+await login(AuthProviderType.LEDGER, {ledgerAccountIndex: selectedAccountIndex});
+
+```
