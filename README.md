@@ -43,7 +43,7 @@ import {AuthContextProvider} from "@elrond-giants/erd-react-hooks";
 </AuthContextProvider>
 ```
 
-2. Use the value provided by AuthContextProvider
+2. Use the value provided by AuthContextProvider.
 
 ```typescript jsx
 import {useAuth} from "@elrond-giants/erd-react-hooks";
@@ -92,5 +92,7 @@ const accounts = getLedgerAccounts();
 
 const selectedAccountIndex = 1;
 await login(AuthProviderType.LEDGER, {ledgerAccountIndex: selectedAccountIndex});
-
 ```
+
+#### `useTransaction` - coming soon
+#### `useQuery` - coming soon
