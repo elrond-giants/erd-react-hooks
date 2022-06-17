@@ -1,7 +1,7 @@
 {
-  "name": "erd-react-hooks",
-  "version": "0.1.0",
-  "description": "",
+  "name": "@elrond-giants/erd-react-hooks",
+  "version": "0.1.1",
+  "description": "React hooks that make it easy to use the Elrond Network.",
   "main": "dist/index.js",
   "types": "dist/index.d.js",
   "scripts": {
@@ -14,7 +14,9 @@
   },
   "keywords": [
     "elrond",
-    "react auth provider"
+    "react auth provider",
+    "react hooks",
+    "erdjs"
   ],
   "author": "ElrondGiants",
   "license": "GPL-3.0-or-later",
@@ -26,5 +28,9 @@
   },
   "dependencies": {
     "@elrond-giants/erdjs-auth": "^0.4.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Elrond-Giants/erd-react-hooks.git"
   }
 }

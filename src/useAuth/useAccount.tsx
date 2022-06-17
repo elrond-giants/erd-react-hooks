@@ -21,7 +21,7 @@ interface IContextValue {
     address: string | null;
     authenticated: boolean;
     provider: IAuthProvider | null;
-    login: (provider: AuthProviderType, options: ILoginOptions) => Promise<string>;
+    login: (provider: AuthProviderType, options?: ILoginOptions) => Promise<string>;
     logout: () => Promise<boolean>;
     getLedgerAccounts: (page?: number | undefined, pageSize?: number | undefined) => Promise<string[]>;
 }
@@ -35,7 +35,7 @@ const contextDefaultValue: IContextValue = {
     address: null,
     authenticated: false,
     provider: null,
-    login: async (provider: AuthProviderType, options: ILoginOptions) => "",
+    login: async (provider: AuthProviderType, options?: ILoginOptions) => "",
     logout: async () => true,
     getLedgerAccounts: (page?: number | undefined, pageSize?: number | undefined) => {
         return Promise.resolve([]);
@@ -82,7 +82,7 @@ export const AuthContextProvider = (
                 {
                     token,
                     ledgerAccountIndex
-                }: ILoginOptions
+                }: ILoginOptions = {}
             ) => {
                 if (authConnector.provider?.getType() !== provider) {
                     await authConnector.init(provider);
