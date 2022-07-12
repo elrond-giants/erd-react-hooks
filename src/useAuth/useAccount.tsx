@@ -3,14 +3,7 @@ import AuthConnector from "./AuthConnector";
 import ProviderBuilder from "./ProviderBuilder";
 import {AuthProviderType, IAuthProvider, NetworkEnv} from "@elrond-giants/erdjs-auth/dist/types";
 import {LedgerProvider} from "@elrond-giants/erdjs-auth/dist";
-
-type RequireOnlyOne<T, Keys extends keyof T = keyof T> =
-    Pick<T, Exclude<keyof T, Keys>>
-    & {
-    [K in Keys]-?:
-    Required<Pick<T, K>>
-    & Partial<Record<Exclude<Keys, K>, undefined>>
-}[Keys]
+import {RequireOnlyOne} from "../types";
 
 interface IContextProviderProps {
     connector?: AuthConnector,
@@ -21,6 +14,7 @@ interface IContextValue {
     address: string | null;
     authenticated: boolean;
     provider: IAuthProvider | null;
+    env?: NetworkEnv;
     login: (provider: AuthProviderType, options?: ILoginOptions) => Promise<string>;
     logout: () => Promise<boolean>;
     getLedgerAccounts: (page?: number | undefined, pageSize?: number | undefined) => Promise<string[]>;
@@ -51,6 +45,7 @@ export const AuthContextProvider = (
         children
     }: PropsWithChildren<RequireOnlyOne<IContextProviderProps>>
 ) => {
+    const [account, setAccount] = useState<any | null>(null);
     const [authConnector, setAuthConnector] = useState(() => {
         const authConnector = getConnector({connector, env});
         authConnector.onChange = () => {
@@ -77,6 +72,7 @@ export const AuthContextProvider = (
             address: state?.address ?? null,
             authenticated: state?.authenticated ?? false,
             provider: authConnector.provider,
+            env,
             login: async (
                 provider: AuthProviderType,
                 {
