@@ -27,7 +27,9 @@
     "rimraf": "^3.0.2"
   },
   "dependencies": {
-    "@elrond-giants/erdjs-auth": "^0.4.1"
+    "@elrond-giants/erdjs-auth": "^0.4.1",
+    "@elrondnetwork/erdjs": "^10.2.7",
+    "@elrondnetwork/erdjs-network-providers": "^0.1.6"
   },
   "repository": {
     "type": "git",
