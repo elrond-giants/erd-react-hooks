@@ -29,7 +29,8 @@
   "dependencies": {
     "@elrond-giants/erdjs-auth": "^0.4.1",
     "@elrondnetwork/erdjs": "^10.2.7",
-    "@elrondnetwork/erdjs-network-providers": "^0.1.6"
+    "@elrondnetwork/erdjs-network-providers": "^0.1.6",
+    "bignumber.js": "^9.0.2"
   },
   "repository": {
     "type": "git",
