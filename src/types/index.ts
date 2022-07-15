@@ -1,4 +1,5 @@
 import {AuthProviderType, IAuthProvider, IAuthState} from "@elrond-giants/erdjs-auth/dist/types";
+import {IGasLimit, TokenPayment, TransactionPayload} from "@elrondnetwork/erdjs/out";
 
 export {AuthProviderType};
 
@@ -19,6 +20,21 @@ export interface IProviderBuilder {
     buildProvider(type: AuthProviderType): IAuthProvider;
 }
 
+export interface ITransactionProps {
+    data: string | TransactionPayload;
+    receiver: string;
+    gasLimit?: IGasLimit;
+    chainId?: string;
+    value?: number | TokenPayment;
+    webReturnUrl?: string;
+    onBeforeSign?: () => void;
+    onSigned?: () => void;
+}
+
+export interface IPoolingOptions {
+    interval?: number;
+    timeout?: number;
+}
 
 export type RequireOnlyOne<T, Keys extends keyof T = keyof T> =
     Pick<T, Exclude<keyof T, Keys>>

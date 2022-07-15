@@ -3,14 +3,13 @@ import AuthConnector from "./AuthConnector";
 import ProviderBuilder from "./ProviderBuilder";
 import {AuthProviderType, IAuthProvider, NetworkEnv} from "@elrond-giants/erdjs-auth/dist/types";
 import {LedgerProvider} from "@elrond-giants/erdjs-auth/dist";
-import {RequireOnlyOne} from "../types";
-import {Account, Address} from "@elrondnetwork/erdjs/out";
+import {Address} from "@elrondnetwork/erdjs/out";
 import {useNetworkProvider} from "../useNetworkProvider";
 import AccountBalance from "../AccountBalance";
 
 interface IContextProviderProps {
     connector?: AuthConnector,
-    env?: NetworkEnv
+    env: NetworkEnv
 }
 
 interface IContextValue {
@@ -19,7 +18,7 @@ interface IContextValue {
     nonce: number;
     balance: AccountBalance;
     provider: IAuthProvider | null;
-    env?: NetworkEnv;
+    env: NetworkEnv;
     login: (provider: AuthProviderType, options?: ILoginOptions) => Promise<string>;
     logout: () => Promise<boolean>;
     getLedgerAccounts: (page?: number | undefined, pageSize?: number | undefined) => Promise<string[]>;
@@ -43,6 +42,7 @@ const contextDefaultValue: IContextValue = {
     nonce: 0,
     balance: new AccountBalance(0),
     provider: null,
+    env: "devnet",
     login: async (provider: AuthProviderType, options?: ILoginOptions) => "",
     logout: async () => true,
     getLedgerAccounts: (page?: number | undefined, pageSize?: number | undefined) => {
@@ -59,7 +59,7 @@ export const AuthContextProvider = (
         connector,
         env,
         children
-    }: PropsWithChildren<RequireOnlyOne<IContextProviderProps>>
+    }: PropsWithChildren<IContextProviderProps>
 ) => {
     const networkProvider = useNetworkProvider();
     const [account, setAccount] = useState<IAccountData | null>(null);
@@ -91,6 +91,7 @@ export const AuthContextProvider = (
         if (!authConnector.initialised()) {
             (async () => {
                 await authConnector.initFromStorage();
+                await refreshAccount();
                 setChangedAt(Date.now())
             })();
         }
