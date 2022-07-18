@@ -2,7 +2,7 @@
 
 ### Overview
 
-This is a library of React hooks built for the Elrond ecosystem. It aims to make it easy to authenticate, sign and send*
+This is a library of React hooks built for the Elrond ecosystem. It aims to make it easy to authenticate, sign and send
 transactions, and query* smart contracts.
 
 It makes authentication as easy as:
@@ -13,7 +13,7 @@ const {login} = useAuth();
 await login(AuthProviderType.WEBWALLET);
 ```
 
-&ast; useTransaction and useQuery will be available soon.
+&ast; useQuery will be available soon.
 
 ### Install
 
@@ -94,5 +94,79 @@ const selectedAccountIndex = 1;
 await login(AuthProviderType.LEDGER, {ledgerAccountIndex: selectedAccountIndex});
 ```
 
-#### `useTransaction` - coming soon
+#### `useTransaction`
+
+This hook makes it easy to sign and broadcast a transaction.
+
+##### How to use
+
+Make sure that `useTransaction` is used inside `AuthContextProvider` and the user is authenticated before trying to make
+a
+transaction.
+
+```typescript jsx
+import {AuthContextProvider} from "@elrond-giants/erd-react-hooks";
+
+
+<AuthContextProvider env={"devnet"}>
+    .....
+
+    <TransactionComponent/>
+
+</AuthContextProvider>
+````
+
+```typescript jsx
+import {useTransaction} from "@elrond-giants/erd-react-hooks";
+
+
+function TransactionComponent() {
+    const {makeTransaction, whenCompleted} = useTransaction();
+
+    const sendTx = async () => {
+        const txHash = await makeTransaction({
+            receiver: "erd.....",
+            data: "test",
+            value: 0.001,
+            onBeforeSign: () => {
+                console.log("Hey, sign the transaction!");
+            },
+            onSigned: () => {
+                console.log("Transaction signed!!");
+            }
+        });
+
+        const txResult = await whenCompleted(txHash, {interval: 2000});
+        if (txResult.status.isExecuted()) {
+            console.log("Hooray, the transaction was successful!");
+        }
+    };
+
+    return <button onClick={sendTx}>make transaction</button>;
+    
+}
+```
+The transaction data can be either a `string` or a `TransactionPayload` object.
+
+```typescript jsx
+import {useTransaction} from "@elrond-giants/erd-react-hooks";
+import {TransactionPayload} from "@elrondnetwork/erdjs/out";
+
+const {makeTransaction, whenCompleted} = useTransaction();
+const data: string | TransactionPayload = TransactionPayload.contractCall()
+    .setFunction(new ContractFunction("SomeFunction"))
+    .addArg(new BigUIntValue(10))
+    .build();
+
+```
+
+#### Caveats
+
+:grey_exclamation: You SHOULD always provide a value for `gasLimit`. In case it is not provided, it will be computed using `GasEstimator().forEGLDTransfer()`.
+
+
+:grey_exclamation: :grey_exclamation: When the account is authenticated with web wallet, the user will be redirected to elrond website to complete the transaction and then back to your application.
+
+You can set the `webReturnUrl` when calling `makeTransaction({webReturnUrl: ""})`. By default, it is set to be `window.location.href`.
+
 #### `useQuery` - coming soon
