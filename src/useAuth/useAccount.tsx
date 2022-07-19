@@ -3,27 +3,27 @@ import AuthConnector from "./AuthConnector";
 import ProviderBuilder from "./ProviderBuilder";
 import {AuthProviderType, IAuthProvider, NetworkEnv} from "@elrond-giants/erdjs-auth/dist/types";
 import {LedgerProvider} from "@elrond-giants/erdjs-auth/dist";
-
-type RequireOnlyOne<T, Keys extends keyof T = keyof T> =
-    Pick<T, Exclude<keyof T, Keys>>
-    & {
-    [K in Keys]-?:
-    Required<Pick<T, K>>
-    & Partial<Record<Exclude<Keys, K>, undefined>>
-}[Keys]
+import {Address} from "@elrondnetwork/erdjs/out";
+import {useNetworkProvider} from "../useNetworkProvider";
+import AccountBalance from "../AccountBalance";
 
 interface IContextProviderProps {
     connector?: AuthConnector,
-    env?: NetworkEnv
+    env: NetworkEnv
 }
 
 interface IContextValue {
     address: string | null;
     authenticated: boolean;
+    nonce: number;
+    balance: AccountBalance;
     provider: IAuthProvider | null;
+    env: NetworkEnv;
     login: (provider: AuthProviderType, options?: ILoginOptions) => Promise<string>;
     logout: () => Promise<boolean>;
     getLedgerAccounts: (page?: number | undefined, pageSize?: number | undefined) => Promise<string[]>;
+    increaseNonce: () => number;
+    refreshAccount: () => void;
 }
 
 interface ILoginOptions {
@@ -31,15 +31,25 @@ interface ILoginOptions {
     ledgerAccountIndex?: number;
 }
 
+interface IAccountData {
+    nonce: number;
+    balance: AccountBalance;
+}
+
 const contextDefaultValue: IContextValue = {
     address: null,
     authenticated: false,
+    nonce: 0,
+    balance: new AccountBalance(0),
     provider: null,
+    env: "devnet",
     login: async (provider: AuthProviderType, options?: ILoginOptions) => "",
     logout: async () => true,
     getLedgerAccounts: (page?: number | undefined, pageSize?: number | undefined) => {
         return Promise.resolve([]);
     },
+    increaseNonce: (): number => { return 0;},
+    refreshAccount: () => {},
 };
 
 export const AuthContext = createContext(contextDefaultValue);
@@ -49,11 +59,14 @@ export const AuthContextProvider = (
         connector,
         env,
         children
-    }: PropsWithChildren<RequireOnlyOne<IContextProviderProps>>
+    }: PropsWithChildren<IContextProviderProps>
 ) => {
+    const networkProvider = useNetworkProvider();
+    const [account, setAccount] = useState<IAccountData | null>(null);
     const [authConnector, setAuthConnector] = useState(() => {
         const authConnector = getConnector({connector, env});
-        authConnector.onChange = () => {
+        authConnector.onChange = async () => {
+            await refreshAccount();
             setChangedAt(Date.now());
         };
 
@@ -61,10 +74,24 @@ export const AuthContextProvider = (
     })
     const [changedAt, setChangedAt] = useState(Date.now());
 
+    const refreshAccount = async () => {
+        const address = authConnector.provider?.getAddress();
+        if (address) {
+            const data = await networkProvider.getAccount(Address.fromBech32(address));
+            setAccount({
+                nonce: data.nonce.valueOf(),
+                balance: new AccountBalance(data.balance)
+            });
+        } else {
+            setAccount(null);
+        }
+    };
+
     useEffect(() => {
         if (!authConnector.initialised()) {
             (async () => {
                 await authConnector.initFromStorage();
+                await refreshAccount();
                 setChangedAt(Date.now())
             })();
         }
@@ -76,7 +103,10 @@ export const AuthContextProvider = (
         return {
             address: state?.address ?? null,
             authenticated: state?.authenticated ?? false,
+            nonce: account?.nonce ?? 0,
+            balance: account?.balance ?? new AccountBalance(0),
             provider: authConnector.provider,
+            env,
             login: async (
                 provider: AuthProviderType,
                 {
@@ -112,10 +142,17 @@ export const AuthContextProvider = (
 
                 return [];
             },
+            increaseNonce: (): number => {
+                if (!account) {return 0;}
+                const acc = {...account, nonce: account.nonce + 1};
+                setAccount(acc);
 
+                return acc.nonce;
+            },
+            refreshAccount
         }
 
-    }, [changedAt]);
+    }, [changedAt, account?.nonce]);
 
 
     return <AuthContext.Provider value={value} children={children}/>;
