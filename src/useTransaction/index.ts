@@ -36,7 +36,7 @@ export const useTransaction = () => {
         }
 
         const signedTx = await provider.signTransaction(tx);
-        console.log(signedTx)
+
 
         if (typeof onSigned === "function") {
             onSigned();
