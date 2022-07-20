@@ -4,8 +4,11 @@ import ProviderBuilder from "./ProviderBuilder";
 import {AuthProviderType, IAuthProvider, NetworkEnv} from "@elrond-giants/erdjs-auth/dist/types";
 import {LedgerProvider} from "@elrond-giants/erdjs-auth/dist";
 import {Address} from "@elrondnetwork/erdjs/out";
-import {useNetworkProvider} from "../useNetworkProvider";
+import {NetworkContext} from "../useNetworkProvider";
 import AccountBalance from "../AccountBalance";
+import {INetworkProvider} from "@elrondnetwork/erdjs-network-providers/out/interface";
+import {network} from "../network";
+import {ApiNetworkProvider} from "@elrondnetwork/erdjs-network-providers/out";
 
 interface IContextProviderProps {
     connector?: AuthConnector,
@@ -61,7 +64,6 @@ export const AuthContextProvider = (
         children
     }: PropsWithChildren<IContextProviderProps>
 ) => {
-    const networkProvider = useNetworkProvider();
     const [account, setAccount] = useState<IAccountData | null>(null);
     const [authConnector, setAuthConnector] = useState(() => {
         const authConnector = getConnector({connector, env});
@@ -73,6 +75,16 @@ export const AuthContextProvider = (
         return authConnector;
     })
     const [changedAt, setChangedAt] = useState(Date.now());
+
+    let networkProvider: INetworkProvider;
+    const networkContext = useContext(NetworkContext);
+    if (networkContext !== undefined && networkContext.provider !== undefined) {
+        networkProvider = networkContext.provider;
+    } else {
+        const url = network[env]["api"];
+        networkProvider = new ApiNetworkProvider(url);
+    }
+
 
     const refreshAccount = async () => {
         const address = authConnector.provider?.getAddress();
