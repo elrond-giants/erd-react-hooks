@@ -4,14 +4,14 @@ import StateStorage from "./StateStorage";
 import {WebProvider} from "@elrond-giants/erdjs-auth";
 
 
-type InitOptions = Partial<Omit<IAuthState, "authProviderType">>;
+type InitOptions = Partial<Omit<IAuthState, "authProviderType">> & { shortLived?: boolean };
 
 const STORAGE_KEY = ".erd.auth";
 export default class AuthConnector {
-    private storage: IStateStorage;
-    private builder: IProviderBuilder;
+    protected storage: IStateStorage;
+    protected builder: IProviderBuilder;
     private _provider: IAuthProvider | undefined;
-    private _onChange: (() => void) = () => {};
+    protected _onChange: (() => void) = () => {};
 
     constructor(builder: IProviderBuilder, storage: IStateStorage | null = null) {
         this.builder = builder;
@@ -26,8 +26,11 @@ export default class AuthConnector {
         return this._provider ? this._provider : null;
     }
 
-    async init(providerType: AuthProviderType): Promise<boolean> {
-        return this.initProvider(this.builder.buildProvider(providerType), {});
+    async init(
+        providerType: AuthProviderType | string,
+        options: { shortLived?: boolean } = {shortLived: false}
+    ): Promise<boolean> {
+        return this.initProvider(this.builder.buildProvider(providerType), options);
     }
 
     saveState() {
@@ -60,7 +63,11 @@ export default class AuthConnector {
         return this._provider !== undefined
     }
 
-    private async initProvider(provider: IAuthProvider, {address, authenticated}: InitOptions) {
+    protected async initProvider(provider: IAuthProvider, {
+        address,
+        authenticated,
+        shortLived
+    }: InitOptions) {
         if (provider instanceof WebProvider && address !== undefined) {
             provider.setState({
                 address,
@@ -69,16 +76,20 @@ export default class AuthConnector {
         }
         const initialised = await provider.init();
         provider.onChange = () => {
-            this.saveState();
+            if (!shortLived) {
+                this.saveState();
+            }
             this._onChange();
         }
         this._provider = provider;
-        this.saveState();
+        if (!shortLived) {
+            this.saveState();
+        }
 
         return initialised;
     }
 
-    private assertInitialised() {
+    protected assertInitialised() {
         if (!this.initialised()) {
             throw new Error("Auth connector must be initialised.");
         }

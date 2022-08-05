@@ -13,7 +13,7 @@ export default class ProviderBuilder implements IProviderBuilder {
         this.env = env;
     }
 
-    buildProvider(type: AuthProviderType): IAuthProvider {
+    buildProvider(type: AuthProviderType | string): IAuthProvider {
         let providerName = type.toLowerCase();
         providerName = providerName.charAt(0).toUpperCase() + providerName.slice(1);
         const method = `build${providerName}Provider`;

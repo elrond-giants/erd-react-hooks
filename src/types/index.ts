@@ -1,5 +1,5 @@
 import {AuthProviderType, IAuthProvider, IAuthState} from "@elrond-giants/erdjs-auth/dist/types";
-import {IGasLimit, TokenPayment, TransactionPayload} from "@elrondnetwork/erdjs/out";
+import {IGasLimit, TokenPayment, Transaction, TransactionPayload} from "@elrondnetwork/erdjs/out";
 
 export {AuthProviderType};
 
@@ -17,7 +17,7 @@ export interface INetworkConfig {
 }
 
 export interface IProviderBuilder {
-    buildProvider(type: AuthProviderType): IAuthProvider;
+    buildProvider(type: AuthProviderType | string): IAuthProvider;
 }
 
 export interface ITransactionProps {
@@ -43,3 +43,10 @@ export type RequireOnlyOne<T, Keys extends keyof T = keyof T> =
     Required<Pick<T, K>>
     & Partial<Record<Exclude<Keys, K>, undefined>>
 }[Keys]
+
+export type TransactionData =  {
+    transaction: ITransactionProps | Transaction;
+    webReturnUrl?: string;
+    onBeforeSign?: () => void;
+    onSigned?: () => void;
+}

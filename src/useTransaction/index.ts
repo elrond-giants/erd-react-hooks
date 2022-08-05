@@ -5,13 +5,14 @@ import {
     ITransactionOnNetwork,
     TokenPayment,
     Transaction,
-    TransactionPayload, TransactionWatcher
+    TransactionPayload,
+    TransactionWatcher
 } from "@elrondnetwork/erdjs/out";
 import {Nonce} from "@elrondnetwork/erdjs-network-providers/out/primitives";
 import {useNetworkProvider} from "../useNetworkProvider";
 import {AuthProviderType} from "@elrond-giants/erdjs-auth/dist/types";
 import {network} from "@elrond-giants/erdjs-auth/dist/network";
-import {IPoolingOptions, ITransactionProps} from "../types";
+import {IPoolingOptions, ITransactionProps, TransactionData} from "../types";
 
 
 export const useTransaction = () => {
@@ -19,27 +20,37 @@ export const useTransaction = () => {
     const networkProvider = useNetworkProvider();
 
 
-    const makeTransaction = async (txData: ITransactionProps) => {
+    const makeTransaction = async (txData: TransactionData) => {
         if (!provider) {
             throw new Error("No auth provider! Make sure the account is authenticated.");
         }
 
-        const {onBeforeSign, onSigned, webReturnUrl} = txData;
-        const tx = await buildTransaction(txData);
+        const {onBeforeSign, onSigned, webReturnUrl, transaction} = txData;
+        let tx: Transaction;
+        if (Object.getPrototypeOf(transaction).constructor.name === Transaction.name) {
+            tx = transaction as Transaction;
+        } else {
+            // @ts-ignore
+            tx = await buildTransaction(transaction);
+        }
+
         if (provider.getType() === AuthProviderType.WEBWALLET) {
             await sendWebTransaction(tx, webReturnUrl ?? window.location.href);
             return "";
         }
 
-        if (typeof onBeforeSign === "function") {
-            onBeforeSign();
-        }
+        let signedTx: any = tx;
+        if (needsSigning(provider.getType())) {
 
-        const signedTx = await provider.signTransaction(tx);
+            if (typeof onBeforeSign === "function") {
+                onBeforeSign();
+            }
 
+            signedTx = await provider.signTransaction(tx);
 
-        if (typeof onSigned === "function") {
-            onSigned();
+            if (typeof onSigned === "function") {
+                onSigned();
+            }
         }
 
         try {
@@ -111,6 +122,15 @@ export const useTransaction = () => {
         const {ChainID} = await networkProvider.getNetworkConfig();
 
         return ChainID;
+    }
+
+    const needsSigning = (providerType: AuthProviderType): boolean => {
+        return [
+            AuthProviderType.PEM,
+            AuthProviderType.LEDGER,
+            AuthProviderType.MAIAR,
+            AuthProviderType.EXTENSION
+        ].includes(providerType);
     }
 
 
