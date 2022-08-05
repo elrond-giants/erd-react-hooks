@@ -125,9 +125,11 @@ function TransactionComponent() {
 
     const sendTx = async () => {
         const txHash = await makeTransaction({
-            receiver: "erd.....",
-            data: "test",
-            value: 0.001,
+            transaction:{
+                receiver: "erd.....",
+                data: "test",
+                value: 0.001,
+            },
             onBeforeSign: () => {
                 console.log("Hey, sign the transaction!");
             },
