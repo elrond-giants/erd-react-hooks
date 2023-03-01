@@ -53,7 +53,7 @@ export default class ProviderBuilder implements IProviderBuilder {
         return new LedgerProviderFactory().createProvider();
     }
 
-    protected buildMaiarConnector() {
+    protected buildMaiarProvider() {
         return this.buildWalletConnectProvider();
     }
 };
