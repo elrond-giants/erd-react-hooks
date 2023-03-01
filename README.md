@@ -77,8 +77,16 @@ await login(AuthProviderType.WALLET_CONNECT, {token});
 const authSignature = provider.getSignature();
 ```
 
+:grey_exclamation: When using the *Wallet Connect provider* (xPortal), you MUST set the Wallet Connect Project ID. 
+You can generate the Project ID at https://cloud.walletconnect.com/sign-in.
+
+To set it, you simply add it to the AuthContextProvider.
+```typescript jsx
+<AuthContextProvider env="devnet" projectId="some-id">
+```
+
 :grey_exclamation: When using the *Wallet Connect provider* (xPortal), the login method will return a promise that resolves with a URL.
-It's a usual practice to put this URL in a QR code and let users scan it with Maiar App.
+It's a usual practice to put this URL in a QR code and let users scan it with xPortal App.
 
 When using the *Ledger provider* you MUST set the `ledgerAccountIndex` in the options object of the `login` method.
 

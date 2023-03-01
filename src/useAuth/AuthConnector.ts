@@ -84,7 +84,7 @@ export default class AuthConnector {
             if (!shortLived) {
                 this.saveState();
             }
-            this._onChange();
+            this.reset();
         });
         const initialised = await provider.init();
         this._provider = provider;
