@@ -3,16 +3,17 @@ import AuthConnector from "./AuthConnector";
 import ProviderBuilder from "./ProviderBuilder";
 import {AuthProviderType, IAuthProvider, NetworkEnv} from "@elrond-giants/erdjs-auth/dist/types";
 import {LedgerProvider} from "@elrond-giants/erdjs-auth/dist";
-import {Address} from "@elrondnetwork/erdjs/out";
+import {Address} from "@multiversx/sdk-core/out";
 import {NetworkContext} from "../useNetworkProvider";
 import AccountBalance from "../AccountBalance";
-import {INetworkProvider} from "@elrondnetwork/erdjs-network-providers/out/interface";
+import {INetworkProvider} from "@multiversx/sdk-network-providers/out/interface";
 import {network} from "../network";
-import {ApiNetworkProvider} from "@elrondnetwork/erdjs-network-providers/out";
+import {ApiNetworkProvider} from "@multiversx/sdk-network-providers/out";
 
 interface IContextProviderProps {
     connector?: AuthConnector,
-    env: NetworkEnv
+    env: NetworkEnv,
+    projectId?: string,
 }
 
 interface IContextValue {
@@ -61,12 +62,13 @@ export const AuthContextProvider = (
     {
         connector,
         env,
-        children
+        children,
+        projectId
     }: PropsWithChildren<IContextProviderProps>
 ) => {
     const [account, setAccount] = useState<IAccountData | null>(null);
     const [authConnector, setAuthConnector] = useState(() => {
-        const authConnector = getConnector({connector, env});
+        const authConnector = getConnector({connector, env, projectId});
         authConnector.onChange = async () => {
             await refreshAccount();
             setChangedAt(Date.now());
@@ -179,9 +181,9 @@ export const useAuth = () => {
     return context;
 }
 
-const getConnector = ({connector, env}: IContextProviderProps): AuthConnector => {
+const getConnector = ({connector, env, projectId}: IContextProviderProps): AuthConnector => {
     if (connector !== undefined) {return connector;}
-    const providerBuilder = new ProviderBuilder(env ?? "devnet");
+    const providerBuilder = new ProviderBuilder(env ?? "devnet", projectId);
 
     return new AuthConnector(providerBuilder);
 }

@@ -7,8 +7,8 @@ import {
     Transaction,
     TransactionPayload,
     TransactionWatcher
-} from "@elrondnetwork/erdjs/out";
-import {Nonce} from "@elrondnetwork/erdjs-network-providers/out/primitives";
+} from "@multiversx/sdk-core/out";
+import {Nonce} from "@multiversx/sdk-network-providers/out/primitives";
 import {useNetworkProvider} from "../useNetworkProvider";
 import {AuthProviderType} from "@elrond-giants/erdjs-auth/dist/types";
 import {network} from "@elrond-giants/erdjs-auth/dist/network";
@@ -128,8 +128,8 @@ export const useTransaction = () => {
         return [
             AuthProviderType.PEM,
             AuthProviderType.LEDGER,
-            AuthProviderType.MAIAR,
-            AuthProviderType.EXTENSION
+            AuthProviderType.EXTENSION,
+            AuthProviderType.WALLET_CONNECT
         ].includes(providerType);
     }
 

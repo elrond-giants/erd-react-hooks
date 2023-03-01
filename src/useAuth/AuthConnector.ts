@@ -74,13 +74,19 @@ export default class AuthConnector {
                 authenticated: authenticated ?? !!address
             });
         }
-        const initialised = await provider.init();
-        provider.onChange = () => {
+        provider.on("login", () => {
             if (!shortLived) {
                 this.saveState();
             }
             this._onChange();
-        }
+        });
+        provider.on("logout", () => {
+            if (!shortLived) {
+                this.saveState();
+            }
+            this._onChange();
+        });
+        const initialised = await provider.init();
         this._provider = provider;
         if (!shortLived) {
             this.saveState();

@@ -1,5 +1,5 @@
 import {AuthProviderType, IAuthProvider, IAuthState} from "@elrond-giants/erdjs-auth/dist/types";
-import {IGasLimit, TokenPayment, Transaction, TransactionPayload} from "@elrondnetwork/erdjs/out";
+import {IGasLimit, TokenPayment, Transaction, TransactionPayload} from "@multiversx/sdk-core/out";
 
 export {AuthProviderType};
 

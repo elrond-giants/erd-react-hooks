@@ -27,7 +27,7 @@ npm install @elrond-giants/erd-react-hooks
 
 #### `useAuth`
 
-This hook makes it easy to authenticate with Maiar App, Web Wallet, Extension, and Ledger. It offers a context provider
+This hook makes it easy to authenticate with xPortal App, Web Wallet, Extension, and Ledger. It offers a context provider
 to keep track of the authentication status.
 
 ##### How to use
@@ -73,11 +73,11 @@ You can pass an object with a `token` to the `login` method, and it will be incl
 const {provider, login} = useAuth();
 const token = "some_token";
 
-await login(AuthProviderType.MAIAR, {token});
+await login(AuthProviderType.WALLET_CONNECT, {token});
 const authSignature = provider.getSignature();
 ```
 
-:grey_exclamation: When using the *Maiar provider*, the login method will return a promise that resolves with a URL.
+:grey_exclamation: When using the *Wallet Connect provider* (xPortal), the login method will return a promise that resolves with a URL.
 It's a usual practice to put this URL in a QR code and let users scan it with Maiar App.
 
 When using the *Ledger provider* you MUST set the `ledgerAccountIndex` in the options object of the `login` method.
@@ -167,7 +167,7 @@ const data: string | TransactionPayload = TransactionPayload.contractCall()
 :grey_exclamation: You SHOULD always provide a value for `gasLimit`. In case it is not provided, it will be computed using `GasEstimator().forEGLDTransfer()`.
 
 
-:grey_exclamation: :grey_exclamation: When the account is authenticated with web wallet, the user will be redirected to elrond website to complete the transaction and then back to your application.
+:grey_exclamation: :grey_exclamation: When the account is authenticated with web wallet, the user will be redirected to MultiversX website to complete the transaction and then back to your application.
 
 You can set the `webReturnUrl` when calling `makeTransaction({webReturnUrl: ""})`. By default, it is set to be `window.location.href`.
 

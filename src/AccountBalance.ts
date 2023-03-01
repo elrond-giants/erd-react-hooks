@@ -1,4 +1,4 @@
-import {IAccountBalance} from "@elrondnetwork/erdjs/out";
+import {IAccountBalance} from "@multiversx/sdk-core/out";
 import BigNumber from "bignumber.js";
 
 const NUM_DECIMALS = 18;

@@ -1,6 +1,6 @@
-import {INetworkProvider} from "@elrondnetwork/erdjs-network-providers/out/interface";
+import {INetworkProvider} from "@multiversx/sdk-network-providers/out/interface";
 import {createContext, PropsWithChildren, useContext} from "react";
-import {ApiNetworkProvider} from "@elrondnetwork/erdjs-network-providers/out";
+import {ApiNetworkProvider} from "@multiversx/sdk-network-providers/out";
 import {network} from "../network";
 import {NetworkEnv} from "@elrond-giants/erdjs-auth/dist/types";
 import {RequireOnlyOne} from "../types";

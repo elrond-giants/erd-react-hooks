@@ -2,20 +2,26 @@ import {AuthProviderType, IAuthProvider, NetworkEnv} from "@elrond-giants/erdjs-
 import {
     ExtensionProviderFactory,
     LedgerProviderFactory,
-    MaiarProviderFactory,
-    WebProviderFactory
+    WebProviderFactory,
+    WalletConnectProviderFactory
 } from "@elrond-giants/erdjs-auth";
 import {IProviderBuilder} from "../types";
 
+
 export default class ProviderBuilder implements IProviderBuilder {
     private env: NetworkEnv;
-    constructor(env:NetworkEnv) {
+    private readonly projectId: string | null
+    constructor(env:NetworkEnv, projectId: string | null = null) {
         this.env = env;
+        this.projectId = projectId;
     }
 
     buildProvider(type: AuthProviderType | string): IAuthProvider {
-        let providerName = type.toLowerCase();
-        providerName = providerName.charAt(0).toUpperCase() + providerName.slice(1);
+        let providerName = type.toLowerCase()
+            .split("_")
+            .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+            .join("");
+
         const method = `build${providerName}Provider`;
 
         // @ts-ignore
@@ -28,9 +34,10 @@ export default class ProviderBuilder implements IProviderBuilder {
 
     }
 
-    protected buildMaiarProvider() {
-        return new MaiarProviderFactory(this.env)
-            .createProvider();
+    protected buildWalletConnectProvider() {
+        if (!this.projectId) {throw new Error("Project ID is required for Wallet Connect.");}
+
+        return new WalletConnectProviderFactory(this.env, this.projectId).createProvider();
     }
 
     protected buildWebwalletProvider() {

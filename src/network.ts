@@ -5,7 +5,7 @@ type NetworkConfig = {
 };
 
 export const network: NetworkConfig = {
-    mainnet: {api: "https://api.elrond.com"},
-    devnet: {api: "https://devnet-api.elrond.com"},
-    testnet: {api: "https://testnet-api.elrond.com"}
+    mainnet: {api: "https://api.multiversx.com"},
+    devnet: {api: "https://devnet-api.multiversx.com"},
+    testnet: {api: "https://testnet-api.multiversx.com"}
 }
