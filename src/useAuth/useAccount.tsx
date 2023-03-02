@@ -11,9 +11,10 @@ import {network} from "../network";
 import {ApiNetworkProvider} from "@multiversx/sdk-network-providers/out";
 
 interface IContextProviderProps {
-    connector?: AuthConnector,
-    env: NetworkEnv,
-    projectId?: string,
+    connector?: AuthConnector;
+    env: NetworkEnv;
+    projectId?: string;
+    enableWebview?: boolean;
 }
 
 interface IContextValue {
@@ -63,7 +64,8 @@ export const AuthContextProvider = (
         connector,
         env,
         children,
-        projectId
+        projectId,
+        enableWebview
     }: PropsWithChildren<IContextProviderProps>
 ) => {
     const [account, setAccount] = useState<IAccountData | null>(null);
@@ -109,7 +111,17 @@ export const AuthContextProvider = (
                 setChangedAt(Date.now())
             })();
         }
-    }, [])
+    }, []);
+
+    useEffect(() => {
+        if (enableWebview && window !== undefined) {
+            const params = new URLSearchParams(window.location.search);
+            const accessToken = params.get("accessToken");
+            if (accessToken) {
+                authConnector.init(AuthProviderType.WEBVIEW);
+            }
+        }
+    }, []);
 
 
     const value = useMemo(() => {

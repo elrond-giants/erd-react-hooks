@@ -3,7 +3,8 @@ import {
     ExtensionProviderFactory,
     LedgerProviderFactory,
     WebProviderFactory,
-    WalletConnectProviderFactory
+    WalletConnectProviderFactory,
+    WebviewProviderFactory
 } from "@elrond-giants/erdjs-auth";
 import {IProviderBuilder} from "../types";
 
@@ -55,5 +56,9 @@ export default class ProviderBuilder implements IProviderBuilder {
 
     protected buildMaiarProvider() {
         return this.buildWalletConnectProvider();
+    }
+
+    protected buildWebviewProvider() {
+        return new WebviewProviderFactory().createProvider();
     }
 };
