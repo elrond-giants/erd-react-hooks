@@ -130,7 +130,8 @@ export const useTransaction = () => {
             AuthProviderType.LEDGER,
             AuthProviderType.EXTENSION,
             AuthProviderType.WALLET_CONNECT,
-            AuthProviderType.WEBWALLET
+            AuthProviderType.WEBWALLET,
+            AuthProviderType.WEBVIEW
         ].includes(providerType);
     }
 
