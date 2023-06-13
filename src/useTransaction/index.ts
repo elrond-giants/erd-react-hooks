@@ -172,7 +172,9 @@ export const useTransaction = () => {
             AuthProviderType.PEM,
             AuthProviderType.LEDGER,
             AuthProviderType.EXTENSION,
-            AuthProviderType.WALLET_CONNECT
+            AuthProviderType.WALLET_CONNECT,
+            AuthProviderType.WEBWALLET,
+            AuthProviderType.WEBVIEW
         ].includes(providerType);
     }
 
