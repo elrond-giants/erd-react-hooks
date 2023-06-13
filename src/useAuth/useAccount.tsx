@@ -39,19 +39,10 @@ interface ILoginOptions {
     ledgerAccountIndex?: number;
 }
 
-// type AccountGuardian = {
-//     address: string;
-//     serviceUID: string;
-//     activationEpoch: number;
-// };
-
 interface IAccountData {
     nonce: number;
     balance: AccountBalance;
     guardian: GuardianData;
-    // guarded: boolean;
-    // activeGuardian?: AccountGuardian;
-    // pendingGuardian?: AccountGuardian;
 }
 
 const contextDefaultValue: IContextValue = {

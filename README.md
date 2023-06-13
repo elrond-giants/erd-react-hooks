@@ -13,8 +13,6 @@ const {login} = useAuth();
 await login(AuthProviderType.WEBWALLET);
 ```
 
-&ast; useQuery will be available soon.
-
 ### Install
 
 ```bash
@@ -51,12 +49,15 @@ import {AuthProviderType} from "@elrond-giants/erd-react-hooks/dist/types";
 
 
 function AuthComponent() {
-    const {address, authenticated, login, logout} = useAuth();
+    const {address, authenticated, guardian, login, logout} = useAuth();
 
     return (
         <div>
-            <span>address: {address}</span>
-            <span>authenticated: {authenticated ? "yes" : "no"}</span>
+            <p>address: {address}</p>
+            <p>authenticated: {authenticated ? "yes" : "no"}</p>
+            <p>Guarded: {guardian.guarded ? "Yes" : "No"}</p>
+            <p>Pending Guardian: {guardian.pendingGuardian?.address.bech32()}</p>
+            <p>Active Guardian: {guardian.activeGuardian?.address.bech32()}</p>
             <button onClick={async () => {
                 await login(AuthProviderType.EXTENSION);
             }}>
@@ -100,6 +101,11 @@ const accounts = getLedgerAccounts();
 
 const selectedAccountIndex = 1;
 await login(AuthProviderType.LEDGER, {ledgerAccountIndex: selectedAccountIndex});
+```
+
+To use the Webview Provider (Beta), you must enable it by setting `enableWebview` to the AuthContextProvider.
+```typescript jsx
+<AuthContextProvider env="devnet" enableWebview={true}>
 ```
 
 #### `useTransaction`
@@ -179,4 +185,3 @@ const data: string | TransactionPayload = TransactionPayload.contractCall()
 
 You can set the `webReturnUrl` when calling `makeTransaction({webReturnUrl: ""})`. By default, it is set to be `window.location.href`.
 
-#### `useQuery` - coming soon
