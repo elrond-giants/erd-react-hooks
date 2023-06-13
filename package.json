@@ -1,6 +1,6 @@
 {
   "name": "@elrond-giants/erd-react-hooks",
-  "version": "0.6.0-beta.0",
+  "version": "0.6.0-alpha.0",
   "description": "React hooks that make it easy to use the MultiversX Network.",
   "main": "dist/index.js",
   "types": "dist/index.d.js",
@@ -21,7 +21,7 @@
   "author": "ElrondGiants",
   "license": "GPL-3.0-or-later",
   "devDependencies": {
-    "@types/node": "^17.0.41",
+    "@types/node": "^18.15.3",
     "@types/react": "^18.0.12",
     "react": "^18.1.0",
     "rimraf": "^3.0.2"
