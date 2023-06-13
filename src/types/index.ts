@@ -1,5 +1,10 @@
 import {AuthProviderType, IAuthProvider, IAuthState} from "@elrond-giants/erdjs-auth/dist/types";
 import {IGasLimit, TokenPayment, Transaction, TransactionPayload} from "@multiversx/sdk-core/out";
+import {
+    IAddress,
+    ITransactionOptions,
+    ITransactionVersion
+} from "@multiversx/sdk-core/out/interface";
 
 export {AuthProviderType};
 
@@ -26,14 +31,18 @@ export interface ITransactionProps {
     gasLimit?: IGasLimit;
     chainId?: string;
     value?: number | TokenPayment;
-    webReturnUrl?: string;
     onBeforeSign?: () => void;
     onSigned?: () => void;
+    version?: ITransactionVersion;
+    options?: ITransactionOptions;
+    guardian?: string;
+
 }
 
 export interface IPoolingOptions {
     interval?: number;
     timeout?: number;
+    patience?: number;
 }
 
 export type RequireOnlyOne<T, Keys extends keyof T = keyof T> =

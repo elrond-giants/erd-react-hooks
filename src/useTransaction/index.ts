@@ -5,8 +5,8 @@ import {
     ITransactionOnNetwork,
     TokenPayment,
     Transaction,
-    TransactionPayload,
-    TransactionWatcher
+    TransactionPayload, TransactionVersion,
+    TransactionWatcher,
 } from "@multiversx/sdk-core/out";
 import {Nonce} from "@multiversx/sdk-network-providers/out/primitives";
 import {useNetworkProvider} from "../useNetworkProvider";
@@ -16,7 +16,14 @@ import {IPoolingOptions, ITransactionProps, TransactionData} from "../types";
 
 
 export const useTransaction = () => {
-    const {address, nonce, provider, env, increaseNonce} = useAuth();
+    const {
+        address,
+        nonce,
+        provider,
+        env,
+        guardian,
+        increaseNonce
+    } = useAuth();
     const networkProvider = useNetworkProvider();
 
 
@@ -25,13 +32,28 @@ export const useTransaction = () => {
             throw new Error("No auth provider! Make sure the account is authenticated.");
         }
 
-        const {onBeforeSign, onSigned, webReturnUrl, transaction} = txData;
+        const {
+            onBeforeSign,
+            onSigned,
+            webReturnUrl,
+            transaction
+        } = txData;
         let tx: Transaction;
         if (Object.getPrototypeOf(transaction).constructor.name === Transaction.name) {
             tx = transaction as Transaction;
         } else {
             // @ts-ignore
             tx = await buildTransaction(transaction);
+        }
+
+        if (guardian.guarded && tx.getGuardian().bech32() === "") {
+            tx.setGuardian(guardian.activeGuardian!.address);
+            tx.setVersion(TransactionVersion.withTxOptions());
+            const options = tx.getOptions();
+            if (!options.isWithGuardian()) {
+                options.setWithGuardian();
+                tx.setOptions(options);
+            }
         }
 
         if (provider.getType() === AuthProviderType.WEBWALLET) {
@@ -69,8 +91,13 @@ export const useTransaction = () => {
         txHash: string,
         options: IPoolingOptions = {}
     ): Promise<ITransactionOnNetwork> => {
-        const {interval, timeout} = options
-        const watcher = new TransactionWatcher(networkProvider, interval, timeout);
+        const {interval, timeout, patience} = options
+        const watcher = new TransactionWatcher(networkProvider, {
+            pollingIntervalMilliseconds: interval,
+            timeoutMilliseconds: timeout,
+            patienceMilliseconds: patience,
+        });
+
         return watcher.awaitCompleted({
             getHash: () => ({hex: () => txHash}),
         });
@@ -95,26 +122,42 @@ export const useTransaction = () => {
     }
 
     const buildTransaction = async (txData: ITransactionProps): Promise<Transaction> => {
-        let {data, value, receiver, gasLimit, chainId} = txData;
+        let {
+            data,
+            value,
+            receiver,
+            gasLimit,
+            chainId,
+            options,
+            guardian : _guardian,
+            version
+        } = txData;
         const payload = data instanceof TransactionPayload ? data : new TransactionPayload(data);
         if (value) {
             value = value instanceof TokenPayment ? value : TokenPayment.egldFromAmount(value);
         }
         if (!gasLimit) {
-            gasLimit = new GasEstimator().forEGLDTransfer(payload.length());
+            let gas = new GasEstimator().forEGLDTransfer(payload.length()).valueOf();
+            if (guardian.guarded) {
+                gas += 50000;
+            }
+            gasLimit = gas;
         }
         if (!chainId) {
             chainId = await getChainId();
         }
 
         return new Transaction({
-            value,
-            gasLimit,
-            sender: Address.fromBech32(address ?? ""),
+            chainID: chainId,
             data: payload,
+            gasLimit,
+            guardian: _guardian ? new Address(_guardian) : undefined,
             nonce: new Nonce(nonce),
+            options,
             receiver: new Address(receiver),
-            chainID: chainId
+            sender: Address.fromBech32(address ?? ""),
+            value,
+            version,
         });
     }
 

@@ -9,6 +9,8 @@ import AccountBalance from "../AccountBalance";
 import {INetworkProvider} from "@multiversx/sdk-network-providers/out/interface";
 import {network} from "../network";
 import {ApiNetworkProvider} from "@multiversx/sdk-network-providers/out";
+import {GuardianData} from "@multiversx/sdk-network-providers/out/accounts";
+import {fetchGuardianData} from "../utils";
 
 interface IContextProviderProps {
     connector?: AuthConnector,
@@ -21,6 +23,7 @@ interface IContextValue {
     authenticated: boolean;
     nonce: number;
     balance: AccountBalance;
+    guardian: GuardianData;
     provider: IAuthProvider | null;
     env: NetworkEnv;
     login: (provider: AuthProviderType, options?: ILoginOptions) => Promise<string>;
@@ -35,9 +38,19 @@ interface ILoginOptions {
     ledgerAccountIndex?: number;
 }
 
+// type AccountGuardian = {
+//     address: string;
+//     serviceUID: string;
+//     activationEpoch: number;
+// };
+
 interface IAccountData {
     nonce: number;
     balance: AccountBalance;
+    guardian: GuardianData;
+    // guarded: boolean;
+    // activeGuardian?: AccountGuardian;
+    // pendingGuardian?: AccountGuardian;
 }
 
 const contextDefaultValue: IContextValue = {
@@ -45,6 +58,7 @@ const contextDefaultValue: IContextValue = {
     authenticated: false,
     nonce: 0,
     balance: new AccountBalance(0),
+    guardian: new GuardianData({guarded: false}),
     provider: null,
     env: "devnet",
     login: async (provider: AuthProviderType, options?: ILoginOptions) => "",
@@ -92,9 +106,11 @@ export const AuthContextProvider = (
         const address = authConnector.provider?.getAddress();
         if (address) {
             const data = await networkProvider.getAccount(Address.fromBech32(address));
+            const guardian = await getGuardian(address, networkProvider);
             setAccount({
                 nonce: data.nonce.valueOf(),
-                balance: new AccountBalance(data.balance)
+                balance: new AccountBalance(data.balance),
+                guardian
             });
         } else {
             setAccount(null);
@@ -119,6 +135,7 @@ export const AuthContextProvider = (
             authenticated: state?.authenticated ?? false,
             nonce: account?.nonce ?? 0,
             balance: account?.balance ?? new AccountBalance(0),
+            guardian: account?.guardian ?? new GuardianData({guarded: false}),
             provider: authConnector.provider,
             env,
             login: async (
@@ -187,3 +204,17 @@ const getConnector = ({connector, env, projectId}: IContextProviderProps): AuthC
 
     return new AuthConnector(providerBuilder);
 }
+
+const getGuardian = async (address: string, networkProvider: INetworkProvider): Promise<GuardianData> => {
+    if (networkProvider instanceof ApiNetworkProvider) {
+        return networkProvider.getGuardianData(Address.fromBech32(address));
+    }
+    const networkConfig = await networkProvider.getNetworkConfig();
+    const guardianDataResponse = await fetchGuardianData(address, networkConfig.ChainID);
+
+    return GuardianData.fromHttpResponse(guardianDataResponse);
+
+
+}
+
+
