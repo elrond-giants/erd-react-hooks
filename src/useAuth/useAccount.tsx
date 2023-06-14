@@ -210,7 +210,13 @@ const getConnector = ({connector, env, projectId}: IContextProviderProps): AuthC
 
 const getGuardian = async (address: string, networkProvider: INetworkProvider): Promise<GuardianData> => {
     if (networkProvider instanceof ApiNetworkProvider) {
-        return networkProvider.getGuardianData(Address.fromBech32(address));
+        try {
+            const guardian = await networkProvider.getGuardianData(Address.fromBech32(address));
+
+            return guardian;
+        } catch (e) {
+            return new GuardianData({guarded: false});
+        }
     }
     const networkConfig = await networkProvider.getNetworkConfig();
     const guardianDataResponse = await fetchGuardianData(address, networkConfig.ChainID);
