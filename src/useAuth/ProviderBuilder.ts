@@ -1,4 +1,9 @@
-import {AuthProviderType, IAuthProvider, NetworkEnv} from "@elrond-giants/erdjs-auth/dist/types";
+import {
+    AuthProviderType,
+    IAuthProvider,
+    IWebConnectionOptions,
+    NetworkEnv
+} from "@elrond-giants/erdjs-auth/dist/types";
 import {
     ExtensionProviderFactory,
     LedgerProviderFactory,
@@ -12,9 +17,16 @@ import {IProviderBuilder} from "../types";
 export default class ProviderBuilder implements IProviderBuilder {
     private env: NetworkEnv;
     private readonly projectId: string | null
-    constructor(env:NetworkEnv, projectId: string | null = null) {
+    private webConnectionOptions: IWebConnectionOptions;
+
+    constructor(
+        env: NetworkEnv,
+        projectId: string | null = null,
+        webConnectionOptions: IWebConnectionOptions = {}
+    ) {
         this.env = env;
         this.projectId = projectId;
+        this.webConnectionOptions = webConnectionOptions;
     }
 
     buildProvider(type: AuthProviderType | string): IAuthProvider {
@@ -43,6 +55,7 @@ export default class ProviderBuilder implements IProviderBuilder {
 
     protected buildWebwalletProvider() {
         return new WebProviderFactory(this.env)
+            .setConnectionOptions(this.webConnectionOptions)
             .createProvider();
     }
 

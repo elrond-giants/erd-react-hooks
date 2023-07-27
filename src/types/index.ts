@@ -1,5 +1,11 @@
 import {AuthProviderType, IAuthProvider, IAuthState} from "@elrond-giants/erdjs-auth/dist/types";
-import {IGasLimit, TokenPayment, Transaction, TransactionPayload} from "@multiversx/sdk-core/out";
+import {
+    IGasLimit, INonce,
+    TokenPayment,
+    TokenTransfer,
+    Transaction,
+    TransactionPayload
+} from "@multiversx/sdk-core/out";
 import {
     IAddress,
     ITransactionOptions,
@@ -30,12 +36,13 @@ export interface ITransactionProps {
     receiver: string;
     gasLimit?: IGasLimit;
     chainId?: string;
-    value?: number | TokenPayment;
+    value?: number | TokenTransfer;
     onBeforeSign?: () => void;
     onSigned?: () => void;
     version?: ITransactionVersion;
     options?: ITransactionOptions;
     guardian?: string;
+    nonce?: number;
 
 }
 
@@ -53,9 +60,21 @@ export type RequireOnlyOne<T, Keys extends keyof T = keyof T> =
     & Partial<Record<Exclude<Keys, K>, undefined>>
 }[Keys]
 
-export type TransactionData =  {
+export type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] }
+
+
+export type TransactionData = {
     transaction: ITransactionProps | Transaction;
     webReturnUrl?: string;
     onBeforeSign?: () => void;
     onSigned?: () => void;
+    guard2FACode?: string;
+}
+
+export type TransactionsData = {
+    transactions: WithRequired<ITransactionProps, "nonce">[] | Transaction[];
+    webReturnUrl?: string;
+    onBeforeSign?: () => void;
+    onSigned?: () => void;
+    guard2FACode?: string;
 }

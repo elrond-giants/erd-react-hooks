@@ -1,5 +1,7 @@
-import {NetworkEnv} from "@elrond-giants/erdjs-auth/dist/types";
+import {AuthProviderType, NetworkEnv} from "@elrond-giants/erdjs-auth/dist/types";
 import {network} from "./network";
+import {Transaction} from "@multiversx/sdk-core/out";
+import {Signature} from "@multiversx/sdk-core/out/signature";
 
 export const chainIdToEnv = (chainId: string): NetworkEnv => {
     if (chainId === "1") {return "mainnet";}
@@ -19,4 +21,49 @@ export const fetchGuardianData = async (address: string, chainId: string) => {
         return null;
     }
 }
+
+export const guardTransactions = async (
+    transactions: Transaction[],
+    code: string,
+    env: NetworkEnv
+): Promise<Transaction[]> => {
+    const url = `${network[env].tools}/guardian/sign-multiple-transactions`;
+    const body = {
+        code,
+        transactions: transactions.map(tx => tx.toSendable())
+    };
+    const response = await fetch(url, {
+        method: "POST",
+        body: JSON.stringify(body),
+    });
+    const result = await response.json();
+    const signatures = result.data.transactions.map(
+        (t: { guardianSignature: string }) => t.guardianSignature
+    );
+
+    return transactions.map((tx, i) => {
+        tx.applyGuardianSignature(new Signature(signatures[i]));
+
+        return tx;
+    });
+
+}
+
+export const requiresGuardianSignature = (tx: Transaction) => {
+    return tx.getOptions().isWithGuardian()
+        && tx.getGuardian().bech32().length > 0
+        && tx.getGuardianSignature().length === 0;
+};
+
+export const shouldApplyGuardianSignature = (providerType: AuthProviderType) => {
+    // Some providers will sign the transaction with the guardian signature
+    // automatically, so we don't need to do it.
+    // For the ones listed below, we need to apply the guardian signature.
+
+    return [
+        AuthProviderType.LEDGER,
+        AuthProviderType.PEM,
+        AuthProviderType.WALLET_CONNECT,
+    ].includes(providerType);
+};
 

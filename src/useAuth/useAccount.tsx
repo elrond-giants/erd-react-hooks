@@ -1,7 +1,12 @@
 import {createContext, PropsWithChildren, useContext, useEffect, useMemo, useState} from "react";
 import AuthConnector from "./AuthConnector";
 import ProviderBuilder from "./ProviderBuilder";
-import {AuthProviderType, IAuthProvider, NetworkEnv} from "@elrond-giants/erdjs-auth/dist/types";
+import {
+    AuthProviderType,
+    IAuthProvider,
+    IWebConnectionOptions,
+    NetworkEnv
+} from "@elrond-giants/erdjs-auth/dist/types";
 import {LedgerProvider} from "@elrond-giants/erdjs-auth/dist";
 import {Address} from "@multiversx/sdk-core/out";
 import {NetworkContext} from "../useNetworkProvider";
@@ -17,6 +22,8 @@ interface IContextProviderProps {
     env: NetworkEnv;
     projectId?: string;
     enableWebview?: boolean;
+    webConnectionOptions?: IWebConnectionOptions;
+    use2FABrowserInput?: boolean;
 }
 
 interface IContextValue {
@@ -27,6 +34,7 @@ interface IContextValue {
     guardian: GuardianData;
     provider: IAuthProvider | null;
     env: NetworkEnv;
+    use2FABrowserInput: boolean;
     login: (provider: AuthProviderType, options?: ILoginOptions) => Promise<string>;
     logout: () => Promise<boolean>;
     getLedgerAccounts: (page?: number | undefined, pageSize?: number | undefined) => Promise<string[]>;
@@ -53,6 +61,7 @@ const contextDefaultValue: IContextValue = {
     guardian: new GuardianData({guarded: false}),
     provider: null,
     env: "devnet",
+    use2FABrowserInput: false,
     login: async (provider: AuthProviderType, options?: ILoginOptions) => "",
     logout: async () => true,
     getLedgerAccounts: (page?: number | undefined, pageSize?: number | undefined) => {
@@ -70,12 +79,19 @@ export const AuthContextProvider = (
         env,
         children,
         projectId,
-        enableWebview
+        enableWebview,
+        webConnectionOptions,
+        use2FABrowserInput = false
     }: PropsWithChildren<IContextProviderProps>
 ) => {
     const [account, setAccount] = useState<IAccountData | null>(null);
     const [authConnector, setAuthConnector] = useState(() => {
-        const authConnector = getConnector({connector, env, projectId});
+        const authConnector = getConnector({
+            connector,
+            env,
+            projectId,
+            webConnectionOptions
+        });
         authConnector.onChange = async () => {
             await refreshAccount();
             setChangedAt(Date.now());
@@ -141,6 +157,7 @@ export const AuthContextProvider = (
             guardian: account?.guardian ?? new GuardianData({guarded: false}),
             provider: authConnector.provider,
             env,
+            use2FABrowserInput,
             login: async (
                 provider: AuthProviderType,
                 {
@@ -201,9 +218,15 @@ export const useAuth = () => {
     return context;
 }
 
-const getConnector = ({connector, env, projectId}: IContextProviderProps): AuthConnector => {
+const getConnector = (
+    {connector, env, projectId, webConnectionOptions}: IContextProviderProps
+): AuthConnector => {
     if (connector !== undefined) {return connector;}
-    const providerBuilder = new ProviderBuilder(env ?? "devnet", projectId);
+    const providerBuilder = new ProviderBuilder(
+        env ?? "devnet",
+        projectId,
+        webConnectionOptions
+    );
 
     return new AuthConnector(providerBuilder);
 }
