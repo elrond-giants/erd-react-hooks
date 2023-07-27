@@ -225,7 +225,7 @@ and fail.
 
 ```typescript jsx
 import {Address, Transaction, TransactionPayload} from "@multiversx/sdk-core/out";
-import {Nonce} from "@multiversx/sdk-network-providers/out/primitives";
+
 
 const {requires2FACode, makeTransaction} = useTransaction();
 const [code, setCode] = useState<string>();
@@ -233,11 +233,11 @@ const sendTransaction = async () => {
     const transaction = new Transaction({
         data: new TransactionPayload("test"),
         gasLimit: 1_000_000,
-        nonce: new Nonce(1),
         value: 1_000,
         sender: Address.fromBech32("erd....."),
         receiver: Address.fromBech32("erd....."),
     });
+    transaction.setNonce(1);
     
     const txHash = await makeTransaction({
         transaction,
