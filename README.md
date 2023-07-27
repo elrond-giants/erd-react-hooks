@@ -2,7 +2,8 @@
 
 ### Overview
 
-This is a library of React hooks built for the Elrond ecosystem. It aims to make it easy to authenticate, sign and send
+This is a library of React hooks built for the MultiversX ecosystem. It aims to make it easy to authenticate, sign and
+send
 transactions, and query* smart contracts.
 
 It makes authentication as easy as:
@@ -86,12 +87,15 @@ To set it, you simply add it to the AuthContextProvider.
 <AuthContextProvider env="devnet" projectId="some-id">
 ```
 
-:grey_exclamation: When using the *Wallet Connect provider* (xPortal), the login method will return a promise that resolves with a URL.
+:grey_exclamation: When using the *Wallet Connect provider* (xPortal), the login method will return a promise that
+resolves with a URL.
 It's a usual practice to put this URL in a QR code and let users scan it with xPortal App.
 
-When using the *Ledger provider* you MUST set the `ledgerAccountIndex` in the options object of the `login` method.
+:grey_exclamation: When using the *Ledger provider* you MUST set the `ledgerAccountIndex` in the options object of
+the `login` method.
 
-The `getLedgerAccounts(page?: number | undefined, pageSize?: number | undefined): Promise<string[]>` method can be used to get a list of accounts.
+The `getLedgerAccounts(page?: number | undefined, pageSize?: number | undefined): Promise<string[]>` method can be used
+to get a list of accounts.
 
 ```typescript
 const {login, getLedgerAccounts} = useAuth();
@@ -103,7 +107,7 @@ const selectedAccountIndex = 1;
 await login(AuthProviderType.LEDGER, {ledgerAccountIndex: selectedAccountIndex});
 ```
 
-To use the Webview Provider (Beta), you must enable it by setting `enableWebview` to the AuthContextProvider.
+To use the Webview Provider, you must enable it by setting `enableWebview` to the AuthContextProvider.
 ```typescript jsx
 <AuthContextProvider env="devnet" enableWebview={true}>
 ```
@@ -135,14 +139,14 @@ import {useTransaction} from "@elrond-giants/erd-react-hooks";
 
 
 function TransactionComponent() {
-    const {makeTransaction, whenCompleted} = useTransaction();
+    const {requires2FACode, makeTransaction, whenCompleted} = useTransaction();
 
     const sendTx = async () => {
         const txHash = await makeTransaction({
             transaction:{
                 receiver: "erd.....",
                 data: "test",
-                value: 0.001,
+                value: 1000,
             },
             onBeforeSign: () => {
                 console.log("Hey, sign the transaction!");
@@ -176,12 +180,102 @@ const data: string | TransactionPayload = TransactionPayload.contractCall()
 
 ```
 
+#### Account Guardians
+
+The `useAuth` hook provides a `guardian` object that contains information about the account guardians.
+
+```typescript jsx
+import {useAuth} from "@elrond-giants/erd-react-hooks";
+
+
+const {guardian} = useAuth();
+
+return (
+    <div>
+        <p>Guarded: {guardian.guarded ? "Yes" : "No"}</p>
+        <p>Pending Guardian: {guardian.pendingGuardian?.address.bech32()}</p>
+        <p>Active Guardian: {guardian.activeGuardian?.address.bech32()}</p>
+    </div>
+);
+
+```
+
+The transactions made from a guarded account need to be signed by the guardian. The current option is to use a service
+provided by MultiversX, which uses 2-Factor Authentication (2FA) to sign the transaction.
+
+The `requires2FACode` property of the `useTransaction` hook can be used to check if the transactions require 2FA.
+
+When using the Browser Extension provider, the guarding is done by the extension and the 2FA is not required. For the
+other providers, the transactions need to be signed by the guardian.
+
+This package handles all the steps in an easy-to-implement way.
+
+The `requires2FACode` will be `true` when the account is guarded and it is authenticated with a provider that does not
+handle 2FA code input, otherwise it will be `false`.
+
+You should use the `requires2FACode` to decide if you need to ask the user for the 2FA code. If you don't want to use a
+custom 2FA input, the package can handle it for you using a simple browser prompt - it needs to be enabled by
+setting `use2FABrowserInput` to the `AuthContextProvider`.
+
+When you have the 2FA code, you can call the `makeTransaction` method, and pass the code to it. Then the guarding will
+be handled by the package using the MultiversX service that guards transactions.
+
+:exclamation: If you don't provide the 2FA code and the `use2FABrowserInput` is not enabled, the transaction(s) will not be guarded
+and fail.
+
+```typescript jsx
+import {Address, Transaction, TransactionPayload} from "@multiversx/sdk-core/out";
+import {Nonce} from "@multiversx/sdk-network-providers/out/primitives";
+
+const {requires2FACode, makeTransaction} = useTransaction();
+const [code, setCode] = useState<string>();
+const sendTransaction = async () => {
+    const transaction = new Transaction({
+        data: new TransactionPayload("test"),
+        gasLimit: 1_000_000,
+        nonce: new Nonce(1),
+        value: 1_000,
+        sender: Address.fromBech32("erd....."),
+        receiver: Address.fromBech32("erd....."),
+    });
+    
+    const txHash = await makeTransaction({
+        transaction,
+        guard2FACode: code
+    });
+};
+
+return (
+    <div>
+        {requires2FACode && (
+            <input
+                type="text"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+            />
+        )}
+        <button onClick={sendTransaction}>Make Tx</button>
+    </div>
+);
+
+
+
+```
+
 #### Caveats
 
-:grey_exclamation: You SHOULD always provide a value for `gasLimit`. In case it is not provided, it will be computed using `GasEstimator().forEGLDTransfer()`.
+:grey_exclamation: You SHOULD always provide a value for `gasLimit`. In case it is not provided, it will be computed
+using `GasEstimator().forEGLDTransfer()`.
 
+:grey_exclamation: You SHOULD always manage and set the `nonce` when sending multiple transactions.
 
-:grey_exclamation: :grey_exclamation: When the account is authenticated with web wallet, the user will be redirected to MultiversX website to complete the transaction and then back to your application.
+:grey_exclamation: :grey_exclamation: When the account is authenticated with web wallet, the user will be redirected to
+MultiversX website to complete the transaction and then back to your application.
 
-You can set the `webReturnUrl` when calling `makeTransaction({webReturnUrl: ""})`. By default, it is set to be `window.location.href`.
+You can set the `webReturnUrl` when calling `makeTransaction({webReturnUrl: ""})`. By default, it is set to
+be `window.location.href`.
+
+:grey_exclamation: :grey_exclamation: When the account is authenticated with web wallet, the `makeTransactions()` method
+will not work and will throw an error. 
+
 
