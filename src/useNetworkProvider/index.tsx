@@ -5,6 +5,7 @@ import {network} from "../network";
 import {NetworkEnv} from "@elrond-giants/erdjs-auth/dist/types";
 import {RequireOnlyOne} from "../types";
 import {AuthContext} from "../useAuth";
+import {getNetworkEnv} from "../utils";
 
 interface IContextValue {
     provider: INetworkProvider;
@@ -29,14 +30,19 @@ export const useNetworkProvider = () => {
     if (context !== undefined && context.provider !== undefined) {return context.provider;}
 
     // If this is used outside Network Context Provider, we'll assume
-    // that the Auth Context is available and we'll try to get the env property.
+    // that the Auth Context is available and we'll try to get the api url property.
     const authContext = useContext(AuthContext);
-    let env: NetworkEnv = "devnet";
-    if (authContext !== undefined && authContext.env !== undefined) {
-        env = authContext.env;
+    if (authContext !== undefined && authContext.networkOptions !== undefined) {
+        if (authContext.networkOptions.apiUrl) {
+            return new ApiNetworkProvider(authContext.networkOptions.apiUrl);
+        }
+        const env = getNetworkEnv(authContext.networkOptions);
+        return getNetworkProvider(env);
     }
 
-    return getNetworkProvider(env);
+    // If this is used outside Network Context Provider and Auth Context Provider,
+    // we'll throw an error.
+    throw new Error("Network Provider not found. Please wrap your component with NetworkProvider.");
 
 }
 

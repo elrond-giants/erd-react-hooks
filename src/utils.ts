@@ -1,13 +1,22 @@
 import {AuthProviderType, NetworkEnv} from "@elrond-giants/erdjs-auth/dist/types";
 import {network} from "./network";
+import {network as walletUrls} from "@elrond-giants/erdjs-auth/dist/network";
 import {Transaction} from "@multiversx/sdk-core/out";
 import {Signature} from "@multiversx/sdk-core/out/signature";
+import {NetworkOptions, RequiredNetworkOptions} from "./types";
 
 export const chainIdToEnv = (chainId: string): NetworkEnv => {
     if (chainId === "1") {return "mainnet";}
     if (chainId === "T") {return "testnet";}
 
     return "devnet";
+}
+
+export const envToChainId = (env: NetworkEnv): string => {
+    if (env === "mainnet") {return "1";}
+    if (env === "testnet") {return "T";}
+
+    return "D";
 }
 
 export const fetchGuardianData = async (address: string, chainId: string) => {
@@ -25,9 +34,9 @@ export const fetchGuardianData = async (address: string, chainId: string) => {
 export const guardTransactions = async (
     transactions: Transaction[],
     code: string,
-    env: NetworkEnv
+    toolsUrl: string,
 ): Promise<Transaction[]> => {
-    const url = `${network[env].tools}/guardian/sign-multiple-transactions`;
+    const url = `${toolsUrl}/guardian/sign-multiple-transactions`;
     const body = {
         code,
         transactions: transactions.map(tx => tx.toSendable())
@@ -67,3 +76,36 @@ export const shouldApplyGuardianSignature = (providerType: AuthProviderType) => 
     ].includes(providerType);
 };
 
+export const getNetworkEnv = (config: NetworkEnv | NetworkOptions): NetworkEnv => {
+    if (typeof config === "string") {
+        return config;
+    }
+
+    return chainIdToEnv(config.chainId);
+}
+
+export const computeNetworkConfig = (config: NetworkEnv | NetworkOptions): RequiredNetworkOptions => {
+    if (typeof config === "string") {
+        const networkUrls = network[config];
+
+        return {
+            chainId: envToChainId(config),
+            apiUrl: networkUrls.api,
+            gatewayUrl: networkUrls.gateway,
+            toolsUrl: networkUrls.tools,
+            walletUrl: walletUrls[config].walletAddress
+        }
+    }
+
+    const env = chainIdToEnv(config.chainId);
+    const defaultNetworkUrls = network[env];
+
+    return {
+        apiUrl: defaultNetworkUrls.api,
+        gatewayUrl: defaultNetworkUrls.gateway,
+        toolsUrl: defaultNetworkUrls.tools,
+        walletUrl: walletUrls[env].walletAddress,
+        ...config
+    }
+
+}

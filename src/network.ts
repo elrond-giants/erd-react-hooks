@@ -16,8 +16,8 @@ export const network: NetworkConfig = {
         tools: "https://mainnet-tools.multiversx.com"
     },
     devnet: {
-        api: "https://devnet-api.multiversx.com",
-        gateway: "https://devnet-gateway.multiversx.com",
+        api: "https://devnet2-api.multiversx.com",
+        gateway: "https://devnet2-gateway.multiversx.com",
         tools: "https://devnet-tools.multiversx.com"
     },
     testnet: {
@@ -25,4 +25,6 @@ export const network: NetworkConfig = {
         gateway: "https://testnet-gateway.multiversx.com",
         tools: "https://testnet-tools.multiversx.com"
     }
-}
+};
+
+export const GUARDIAN_SERVICE_INVISIBLE = "INVISIBLE_GUARDIAN";

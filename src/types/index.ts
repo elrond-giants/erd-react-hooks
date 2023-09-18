@@ -1,4 +1,9 @@
-import {AuthProviderType, IAuthProvider, IAuthState} from "@elrond-giants/erdjs-auth/dist/types";
+import {
+    AuthProviderType,
+    IAuthProvider,
+    IAuthState,
+    IWebConnectionOptions
+} from "@elrond-giants/erdjs-auth/dist/types";
 import {
     IGasLimit, INonce,
     TokenPayment,
@@ -78,3 +83,24 @@ export type TransactionsData = {
     onSigned?: () => void;
     guard2FACode?: string;
 }
+
+export type ProviderBuilderOptions = {
+    chainId: string;
+    projectId?: string;
+    webConnectionOptions?: IWebConnectionOptions;
+    walletAddress?: string;
+}
+
+export type NetworkOptions = {
+    chainId: string;
+    apiUrl?: string;
+    gatewayUrl?: string;
+    walletUrl?: string;
+    toolsUrl?: string;
+}
+
+// export type RequiredNetworkOptions = Required<Omit<NetworkOptions, "walletUrl">> & {
+//     walletUrl?: string
+// };
+
+export type RequiredNetworkOptions = Required<NetworkOptions>;

@@ -63,11 +63,10 @@ export default class AuthConnector {
         return this._provider !== undefined
     }
 
-    protected async initProvider(provider: IAuthProvider, {
-        address,
-        authenticated,
-        shortLived
-    }: InitOptions) {
+    protected async initProvider(
+        provider: IAuthProvider,
+        {address, authenticated, shortLived}: InitOptions
+    ) {
         if (provider instanceof WebProvider && address !== undefined) {
             provider.setState({
                 address,

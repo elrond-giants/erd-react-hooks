@@ -2,7 +2,6 @@ import {
     AuthProviderType,
     IAuthProvider,
     IWebConnectionOptions,
-    NetworkEnv
 } from "@elrond-giants/erdjs-auth/dist/types";
 import {
     ExtensionProviderFactory,
@@ -11,23 +10,12 @@ import {
     WalletConnectProviderFactory,
     WebviewProviderFactory
 } from "@elrond-giants/erdjs-auth";
-import {IProviderBuilder} from "../types";
+import {IProviderBuilder, ProviderBuilderOptions} from "../types";
 
 
 export default class ProviderBuilder implements IProviderBuilder {
-    private env: NetworkEnv;
-    private readonly projectId: string | null
-    private webConnectionOptions: IWebConnectionOptions;
 
-    constructor(
-        env: NetworkEnv,
-        projectId: string | null = null,
-        webConnectionOptions: IWebConnectionOptions = {}
-    ) {
-        this.env = env;
-        this.projectId = projectId;
-        this.webConnectionOptions = webConnectionOptions;
-    }
+    constructor(protected options: ProviderBuilderOptions) {}
 
     buildProvider(type: AuthProviderType | string): IAuthProvider {
         let providerName = type.toLowerCase()
@@ -48,14 +36,20 @@ export default class ProviderBuilder implements IProviderBuilder {
     }
 
     protected buildWalletConnectProvider() {
-        if (!this.projectId) {throw new Error("Project ID is required for Wallet Connect.");}
+        if (!this.options.projectId) {throw new Error("Project ID is required for Wallet Connect.");}
 
-        return new WalletConnectProviderFactory(this.env, this.projectId).createProvider();
+        return new WalletConnectProviderFactory({
+            chainId: this.options.chainId,
+            projectId: this.options.projectId,
+        }).createProvider();
     }
 
     protected buildWebwalletProvider() {
-        return new WebProviderFactory(this.env)
-            .setConnectionOptions(this.webConnectionOptions)
+        return new WebProviderFactory({
+            chainId: this.options.chainId,
+            networkOptions: this.options.webConnectionOptions,
+            walletAddress: this.options.walletAddress,
+        })
             .createProvider();
     }
 

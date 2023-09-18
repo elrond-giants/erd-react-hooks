@@ -15,11 +15,13 @@ import {INetworkProvider} from "@multiversx/sdk-network-providers/out/interface"
 import {network} from "../network";
 import {ApiNetworkProvider} from "@multiversx/sdk-network-providers/out";
 import {GuardianData} from "@multiversx/sdk-network-providers/out/accounts";
-import {fetchGuardianData} from "../utils";
+import {computeNetworkConfig, fetchGuardianData, getNetworkEnv} from "../utils";
+import {NetworkOptions, ProviderBuilderOptions, RequiredNetworkOptions} from "../types";
+
 
 interface IContextProviderProps {
     connector?: AuthConnector;
-    env: NetworkEnv;
+    env: NetworkEnv | NetworkOptions;
     projectId?: string;
     enableWebview?: boolean;
     webConnectionOptions?: IWebConnectionOptions;
@@ -33,7 +35,7 @@ interface IContextValue {
     balance: AccountBalance;
     guardian: GuardianData;
     provider: IAuthProvider | null;
-    env: NetworkEnv;
+    networkOptions: RequiredNetworkOptions;
     use2FABrowserInput: boolean;
     login: (provider: AuthProviderType, options?: ILoginOptions) => Promise<string>;
     logout: () => Promise<boolean>;
@@ -53,6 +55,8 @@ interface IAccountData {
     guardian: GuardianData;
 }
 
+const devnetNetworkOptions: RequiredNetworkOptions = computeNetworkConfig("devnet");
+
 const contextDefaultValue: IContextValue = {
     address: null,
     authenticated: false,
@@ -60,7 +64,7 @@ const contextDefaultValue: IContextValue = {
     balance: new AccountBalance(0),
     guardian: new GuardianData({guarded: false}),
     provider: null,
-    env: "devnet",
+    networkOptions: devnetNetworkOptions,
     use2FABrowserInput: false,
     login: async (provider: AuthProviderType, options?: ILoginOptions) => "",
     logout: async () => true,
@@ -84,14 +88,15 @@ export const AuthContextProvider = (
         use2FABrowserInput = false
     }: PropsWithChildren<IContextProviderProps>
 ) => {
+    const networkOptions = computeNetworkConfig(env);
     const [account, setAccount] = useState<IAccountData | null>(null);
     const [authConnector, setAuthConnector] = useState(() => {
-        const authConnector = getConnector({
-            connector,
-            env,
+        const authConnector = connector ?? new AuthConnector(new ProviderBuilder({
             projectId,
-            webConnectionOptions
-        });
+            webConnectionOptions,
+            chainId: networkOptions.chainId,
+            walletAddress: networkOptions.walletUrl,
+        }));
         authConnector.onChange = async () => {
             await refreshAccount();
             setChangedAt(Date.now());
@@ -106,8 +111,7 @@ export const AuthContextProvider = (
     if (networkContext !== undefined && networkContext.provider !== undefined) {
         networkProvider = networkContext.provider;
     } else {
-        const url = network[env]["api"];
-        networkProvider = new ApiNetworkProvider(url);
+        networkProvider = new ApiNetworkProvider(networkOptions.apiUrl);
     }
 
 
@@ -156,7 +160,7 @@ export const AuthContextProvider = (
             balance: account?.balance ?? new AccountBalance(0),
             guardian: account?.guardian ?? new GuardianData({guarded: false}),
             provider: authConnector.provider,
-            env,
+            networkOptions,
             use2FABrowserInput,
             login: async (
                 provider: AuthProviderType,
@@ -216,19 +220,6 @@ export const useAuth = () => {
         throw new Error(`useAuth must be used within an AuthContextProvider.`);
     }
     return context;
-}
-
-const getConnector = (
-    {connector, env, projectId, webConnectionOptions}: IContextProviderProps
-): AuthConnector => {
-    if (connector !== undefined) {return connector;}
-    const providerBuilder = new ProviderBuilder(
-        env ?? "devnet",
-        projectId,
-        webConnectionOptions
-    );
-
-    return new AuthConnector(providerBuilder);
 }
 
 const getGuardian = async (address: string, networkProvider: INetworkProvider): Promise<GuardianData> => {

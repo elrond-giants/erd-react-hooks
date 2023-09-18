@@ -37,7 +37,7 @@ to keep track of the authentication status.
 import {AuthContextProvider} from "@elrond-giants/erd-react-hooks";
 
 
-<AuthContextProvider env={"devnet"}>
+<AuthContextProvider env={{chainId: "D"}}>
     .....
 </AuthContextProvider>
 ```
@@ -84,7 +84,7 @@ You can generate the Project ID at https://cloud.walletconnect.com/sign-in.
 
 To set it, you simply add it to the AuthContextProvider.
 ```typescript jsx
-<AuthContextProvider env="devnet" projectId="some-id">
+<AuthContextProvider env={{chainId: "D"}} projectId="some-id">
 ```
 
 :grey_exclamation: When using the *Wallet Connect provider* (xPortal), the login method will return a promise that
@@ -109,8 +109,24 @@ await login(AuthProviderType.LEDGER, {ledgerAccountIndex: selectedAccountIndex})
 
 To use the Webview Provider, you must enable it by setting `enableWebview` to the AuthContextProvider.
 ```typescript jsx
-<AuthContextProvider env="devnet" enableWebview={true}>
+<AuthContextProvider env={{chainId: "D"}} enableWebview={true}>
 ```
+
+If you want to set custom api and gateway urls, you can do it by setting `apiUrl` and `gatewayUrl` to the
+AuthContextProvider.
+
+```typescript jsx 
+<AuthContextProvider
+    env={{
+        chainId: "D",
+        apiUrl: "https://elrond-api-devnet.public.blastapi.io"
+    }}
+>
+```
+
+:grey_exclamation: Keep in mind that if you don't set the `apiUrl` and `gatewayUrl`, the default ones (provided by
+MultiversX) will be used. The Devnet default urls are the ones pointing to the Devnet 2.
+
 
 #### `useTransaction`
 
@@ -126,7 +142,7 @@ transaction.
 import {AuthContextProvider} from "@elrond-giants/erd-react-hooks";
 
 
-<AuthContextProvider env={"devnet"}>
+<AuthContextProvider env={{chainId: "D"}}>
     .....
 
     <TransactionComponent/>

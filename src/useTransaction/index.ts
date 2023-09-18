@@ -20,6 +20,7 @@ import {
     shouldApplyGuardianSignature
 } from "../utils";
 import {useMemo} from "react";
+import {GUARDIAN_SERVICE_INVISIBLE} from "../network";
 
 
 export const useTransaction = () => {
@@ -27,7 +28,7 @@ export const useTransaction = () => {
         address,
         nonce,
         provider,
-        env,
+        networkOptions,
         guardian,
         use2FABrowserInput,
         increaseNonce
@@ -37,7 +38,9 @@ export const useTransaction = () => {
         if (!provider) {
             return false;
         }
-        return shouldApplyGuardianSignature(provider.getType()) && guardian.guarded;
+        return guardian.guarded
+            && guardian.activeGuardian?.serviceUID !== GUARDIAN_SERVICE_INVISIBLE
+            && shouldApplyGuardianSignature(provider.getType());
     }, [provider, guardian]);
 
 
@@ -61,7 +64,10 @@ export const useTransaction = () => {
             return "";
         }
 
-        if (requiresGuardianSignature(tx)) {
+        if (
+            requiresGuardianSignature(tx)
+            && guardian.activeGuardian?.serviceUID !== GUARDIAN_SERVICE_INVISIBLE
+        ) {
             const guardedTx = await guardTransactions([tx], guard2FACode);
             tx = guardedTx[0];
         }
@@ -114,7 +120,7 @@ export const useTransaction = () => {
         }));
 
 
-        if (guardian.guarded) {
+        if (guardian.guarded && guardian.activeGuardian?.serviceUID !== GUARDIAN_SERVICE_INVISIBLE) {
             txs = await guardTransactions(txs, guard2FACode);
         }
 
@@ -186,7 +192,7 @@ export const useTransaction = () => {
             + `&data=${plainTx.data}`
             + `&callbackUrl=${returnUrl}`;
 
-        const networkUrl = new URL(network[env].walletAddress);
+        const networkUrl = new URL(networkOptions.walletUrl);
 
         window.location.href = `${networkUrl.origin}/hook/transaction/?${urlString}`;
 
@@ -268,7 +274,7 @@ export const useTransaction = () => {
 
     const guardTransactions = async (transactions: Transaction[], code?: string) => {
         if (code) {
-            return _guardTransactions(transactions, code, env);
+            return _guardTransactions(transactions, code, networkOptions.toolsUrl);
         }
         // If the code was not provided and the provider can handle
         // the guardian signature, we'll let the provider handle it.
@@ -282,7 +288,7 @@ export const useTransaction = () => {
         }
         const inputCode = prompt("Please enter your 2FA code");
         if (inputCode) {
-            return _guardTransactions(transactions, inputCode, env);
+            return _guardTransactions(transactions, inputCode, networkOptions.toolsUrl);
         }
 
         return transactions;
