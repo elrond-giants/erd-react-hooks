@@ -99,8 +99,4 @@ export type NetworkOptions = {
     toolsUrl?: string;
 }
 
-// export type RequiredNetworkOptions = Required<Omit<NetworkOptions, "walletUrl">> & {
-//     walletUrl?: string
-// };
-
 export type RequiredNetworkOptions = Required<NetworkOptions>;

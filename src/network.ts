@@ -16,8 +16,8 @@ export const network: NetworkConfig = {
         tools: "https://mainnet-tools.multiversx.com"
     },
     devnet: {
-        api: "https://devnet2-api.multiversx.com",
-        gateway: "https://devnet2-gateway.multiversx.com",
+        api: "https://devnet-api.multiversx.com",
+        gateway: "https://devnet-gateway.multiversx.com",
         tools: "https://devnet-tools.multiversx.com"
     },
     testnet: {
